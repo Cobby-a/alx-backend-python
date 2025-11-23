@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
+    'django_filters'
 
     'chats.apps.ChatsConfig'
 ]
@@ -65,6 +66,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ],
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
         'rest_framework.parsers.FormParser',
