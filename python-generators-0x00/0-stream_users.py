@@ -1,6 +1,7 @@
 from seed import connect_to_prodev
 
 import mysql.connector
+from contextlib import closing
 
 def stream_users():
     """
@@ -15,21 +16,34 @@ def stream_users():
 
     # Use buffered=False to enable server-side cursors (unbuffered iteration)
     # This is essential for large datasets as it prevents fetching all results 
-    # into client memory at once. 
-    cursor = connection.cursor(dictionary=True, buffered=False)
+    # into client memory at once.
+    with closing(connection):
+        # Use buffered=False for server-side cursors (unbuffered iteration)
+        with closing(connection.cursor(dictionary=True, buffered=False)) as cursor:
+            query = "SELECT user_id, name, email, age FROM user_data"
+
+            try:
+                cursor.execute(query)
+                
+                for row in cursor:
+                    yield row
+                    
+            except mysql.connector.Error as err:
+                print(f"Error executing query: {err}")
+    # cursor = connection.cursor(dictionary=True, buffered=False)
     
-    query = "SELECT user_id, name, email, age FROM user_data"
+    # query = "SELECT user_id, name, email, age FROM user_data"
 
-    try:
-        cursor.execute(query)
+    # try:
+    #     cursor.execute(query)
         
 
-        for row in cursor:
-            yield row
+    #     for row in cursor:
+    #         yield row
             
-    except mysql.connector.Error as err:
-        print(f"Error executing query: {err}")
+    # except mysql.connector.Error as err:
+    #     print(f"Error executing query: {err}")
         
-    finally:
-        cursor.close()
-        connection.close()
+    # finally:
+    #     cursor.close()
+    #     connection.close()
