@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Conversation, Message, User
 from .serializers import ConversationSerializer, MessageSerializer, UserSerializer # Assuming UserSerializer exists
-from .permissions import IsParticipant
+from .permissions import IsParticipant, IsParticipantOfConversation
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -24,7 +24,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
     queryset = Conversation.objects.all().order_by('-created_at')
     serializer_class = ConversationSerializer
     # 🔑 Apply the custom permission here
-    permission_classes = [IsAuthenticated, IsParticipant]
+    permission_classes = [IsAuthenticated, IsParticipant, IsParticipantOfConversation]
     
     def get_queryset(self):
         return Conversation.objects.filter(participants=self.request.user)
@@ -48,7 +48,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all().order_by('sent_at')
     serializer_class = MessageSerializer
-    permission_classes = [IsAuthenticated, IsParticipant]    
+    permission_classes = [IsAuthenticated, IsParticipant, IsParticipantOfConversation]    
     # Add filters backend
     filter_backends = [DjangoFilterBackend]
     # Define fields available for filtering (e.g., filter by sender)
