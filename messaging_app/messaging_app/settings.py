@@ -75,6 +75,24 @@ REST_FRAMEWORK = {
     ],    
 }
 
+
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    # Shorter lifespan for security, requires refresh often
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5), 
+    
+    # Longer lifespan for user convenience, can be revoked
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=90), 
+    
+    # Use 'JTI' (JWT ID) in tokens for potential blacklisting/revocation
+    'JID_CLAIM': 'jti', 
+    
+    # Ensures tokens are not stored client-side in cookies unless you explicitly configure it
+    'AUTH_HEADER_TYPES': ('Bearer',), 
+}
+
 ROOT_URLCONF = 'messaging_app.urls'
 
 TEMPLATES = [
