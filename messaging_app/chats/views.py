@@ -9,6 +9,9 @@ from .serializers import ConversationSerializer, MessageSerializer, UserSerializ
 from .permissions import IsParticipant, IsParticipantOfConversation
 
 
+from .pagination import MessagePagination # 🔑 Import custom pagination
+from .filters import MessageFilter
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('email')
     serializer_class = UserSerializer
@@ -58,6 +61,11 @@ class MessageViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     # Define fields available for filtering (e.g., filter by sender)
     filterset_fields = ['sender_id', 'conversation_id']
+
+    pagination_class = MessagePagination
+    
+    # 🔑 TASK: Specify the filter class for this ViewSet
+    filterset_class = MessageFilter
 
     def get_queryset(self):
         user_conversations = Conversation.objects.filter(participants=self.request.user)
