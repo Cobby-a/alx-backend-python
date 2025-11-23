@@ -1,42 +1,66 @@
-from rest_framework import viewsets
-from rest_framework.permissions import AllowAny # Use IsAuthenticated for a real project
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
+
+from django_filters.rest_framework import DjangoFilterBackend
 from .models import Conversation, Message, User
 from .serializers import ConversationSerializer, MessageSerializer, UserSerializer # Assuming UserSerializer exists
 
-# Note: For a real-world application, you would enforce authentication here.
-# We'll use AllowAny for initial project setup.
+
 
 class UserViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows users to be viewed or edited.
-    We include this for testing purposes, assuming User creation/management.
-    """
     queryset = User.objects.all().order_by('email')
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
+
+
+# class ConversationViewSet(viewsets.ModelViewSet):
+#     queryset = Conversation.objects.all().order_by('-created_at')
+#     serializer_class = ConversationSerializer
+#     permission_classes = [AllowAny]
 
 
 class ConversationViewSet(viewsets.ModelViewSet):
     queryset = Conversation.objects.all().order_by('-created_at')
     serializer_class = ConversationSerializer
     permission_classes = [AllowAny]
+    
+    # Add filters backend
+    filter_backends = [DjangoFilterBackend]
+    # Define fields available for filtering (e.g., filter by created_at)
+    filterset_fields = ['created_at']
 
-    # Optional: Customize queryset to only show conversations the current user is a part of
-    # def get_queryset(self):
-    #     user = self.request.user
-    #     return Conversation.objects.filter(participants_id=user).order_by('-created_at')
+    # Custom action to demonstrate use of 'status' and custom endpoint logic
+    @action(detail=True, methods=['post'], name='archive')
+    def archive(self, request, pk=None):
+        """Allows archiving a conversation."""
+        conversation = self.get_object()
+        # Logic to archive the conversation would go here (e.g., setting a flag)
+        # For demonstration, we just return a status response
+        return Response({'status': f'Conversation {conversation.conversation_id} archived'}, 
+                        status=status.HTTP_200_OK)
 
 
 class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all().order_by('sent_at')
     serializer_class = MessageSerializer
     permission_classes = [AllowAny]
+    
+    # Add filters backend
+    filter_backends = [DjangoFilterBackend]
+    # Define fields available for filtering (e.g., filter by sender)
+    filterset_fields = ['sender_id', 'conversation_id']
+    
+# class MessageViewSet(viewsets.ModelViewSet):
+#     queryset = Message.objects.all().order_by('sent_at')
+#     serializer_class = MessageSerializer
+#     permission_classes = [AllowAny]
 
-    def get_queryset(self):
-        conversation_id = self.request.query_params.get('conversation_id')
-        queryset = Message.objects.all().order_by('sent_at')
+#     def get_queryset(self):
+#         conversation_id = self.request.query_params.get('conversation_id')
+#         queryset = Message.objects.all().order_by('sent_at')
 
-        if conversation_id:
-            queryset = queryset.filter(conversation__conversation_id=conversation_id)
+#         if conversation_id:
+#             queryset = queryset.filter(conversation__conversation_id=conversation_id)
 
-        return queryset
+#         return queryset
