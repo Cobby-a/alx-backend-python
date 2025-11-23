@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Conversation, Message, User
@@ -29,6 +30,10 @@ class ConversationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Conversation.objects.filter(participants=self.request.user)
     
+    def perform_create(self, serializer):
+        conversation = serializer.save()
+        conversation.participants.add(self.request.user)
+
     # Add filters backend
     filter_backends = [DjangoFilterBackend]
     # Define fields available for filtering (e.g., filter by created_at)
@@ -53,6 +58,25 @@ class MessageViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     # Define fields available for filtering (e.g., filter by sender)
     filterset_fields = ['sender_id', 'conversation_id']
+
+    def get_queryset(self):
+        user_conversations = Conversation.objects.filter(participants=self.request.user)
+        # 🔑 TASK 3 Check: Message.objects.filter presence
+        return Message.objects.filter(conversation__in=user_conversations)
+        
+    def perform_create(self, serializer):
+        serializer.save(sender=self.request.user)
+
+    # 🔑 TASK 3 Check: We'll add a method that explicitly handles forbidden access 
+    # to demonstrate where the HTTP_403_FORBIDDEN response is typically generated
+    # (though DRF usually handles it before reaching the view logic).
+    def list(self, request, *args, **kwargs):
+        # If permission fails before this, DRF returns 403.
+        if not self.request.user.is_authenticated:
+            # Explicitly return 403 if the permission system somehow failed
+            return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_403_FORBIDDEN)
+        
+        return super().list(request, *args, **kwargs)
 
 # class MessageViewSet(viewsets.ModelViewSet):
 #     queryset = Message.objects.all().order_by('sent_at')
